@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManager - Sistema de Gestão Escolar</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        * {
+            transition: all 0.3s ease;
+        }
+
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .input {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            width: 100%;
+            transition: border-color 0.2s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: var(--success);
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1100;
+            animation: toastSlideIn 0.3s ease;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .dark {
+            background: #0f172a;
+            color: white;
+        }
+
+        .dark .card {
+            background: #1e293b;
+            color: white;
+        }
+
+        .dark .input {
+            background: #1e293b;
+            border-color: #334155;
+            color: white;
+        }
+
+        .dark .modal-content {
+            background: #1e293b;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 999;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-50 md:translate-x-0">
+        <div class="p-6 border-b">
+            <h1 class="text-2xl font-bold text-blue-600">
+                <i class="fas fa-graduation-cap mr-2"></i>
+                EduManager
+            </h1>
+        </div>
+        <nav class="p-4">
+            <ul class="space-y-2">
+                <li><a href="#" onclick="showSection('dashboard')" class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700">
+                    <i class="fas fa-home mr-3"></i>Dashboard
+                </a></li>
+                <li><a href="#" onclick="showSection('escolas')" class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700">
+                    <i class="fas fa-school mr-3"></i>Escolas
+                </a></li>
+                <li><a href="#" onclick="showSection('series')" class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700">
+                    <i class="fas fa-layer-group mr-3"></i>Séries
+                </a></li>
+                <li><a href="#" onclick="showSection('salas')" class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700">
+                    <i class="fas fa-door-open mr-3"></i>Salas
+                </a></li>
+                <li><a href="#" onclick="showSection('alunos')" class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700">
+                    <i class="fas fa-users mr-3"></i>Alunos
+                </a></li>
+                <li><a href="#" onclick="showSection('atividades')" class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700">
+                    <i class="fas fa-tasks mr-3"></i>Atividades
+                </a></li>
+                <li><a href="#" onclick="showSection('moderadores')" class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700">
+                    <i class="fas fa-user-shield mr-3"></i>Moderadores
+                </a></li>
+                <li><a href="#" onclick="showSection('configuracoes')" class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700">
+                    <i class="fas fa-cog mr-3"></i>Configurações
+                </a></li>
+            </ul>
+        </nav>
+        <div class="absolute bottom-4 left-4 right-4">
+            <button onclick="logout()" class="w-full btn btn-danger">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="md:ml-64">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b p-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <button onclick="toggleSidebar()" class="md:hidden mr-4 p-2 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 id="page-title" class="text-xl font-semibold text-gray-800">Dashboard</h2>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-gray-100">
+                    <i id="theme-icon" class="fas fa-moon"></i>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <img src="https://via.placeholder.com/32" alt="Avatar" class="w-8 h-8 rounded-full">
+                    <span id="user-name" class="text-sm font-medium">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="p-6">
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="section">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total de Escolas</p>
+                                <p class="text-2xl font-bold text-blue-600" id="total-escolas">0</p>
+                            </div>
+                            <i class="fas fa-school text-3xl text-blue-600"></i>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total de Alunos</p>
+                                <p class="text-2xl font-bold text-green-600" id="total-alunos">0</p>
+                            </div>
+                            <i class="fas fa-users text-3xl text-green-600"></i>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Atividades Ativas</p>
+                                <p class="text-2xl font-bold text-yellow-600" id="total-atividades">0</p>
+                            </div>
+                            <i class="fas fa-tasks text-3xl text-yellow-600"></i>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Taxa de Conclusão</p>
+                                <p class="text-2xl font-bold text-purple-600" id="taxa-conclusao">0%</p>
+                            </div>
+                            <i class="fas fa-chart-line text-3xl text-purple-600"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Progresso por Sala</h3>
+                        <div id="progresso-salas" class="space-y-4">
+                            <!-- Progresso será inserido aqui -->
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4">Atividades Recentes</h3>
+                        <div id="atividades-recentes" class="space-y-3">
+                            <!-- Atividades serão inseridas aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Escolas Section -->
+            <div id="escolas-section" class="section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Gerenciar Escolas</h3>
+                    <button onclick="openModal('escola-modal')" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Nova Escola
+                    </button>
+                </div>
+                <div class="card p-6">
+                    <div class="mb-4 flex flex-col md:flex-row gap-4">
+                        <input type="text" id="search-escolas" placeholder="Buscar escolas..." class="input flex-1">
+                        <button onclick="exportCSV('escolas')" class="btn btn-secondary">
+                            <i class="fas fa-download"></i>
+                            Exportar CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left p-3">Nome</th>
+                                    <th class="text-left p-3">Endereço</th>
+                                    <th class="text-left p-3">Telefone</th>
+                                    <th class="text-left p-3">Alunos</th>
+                                    <th class="text-left p-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="escolas-table">
+                                <!-- Escolas serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Séries Section -->
+            <div id="series-section" class="section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Gerenciar Séries</h3>
+                    <button onclick="openModal('serie-modal')" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Nova Série
+                    </button>
+                </div>
+                <div class="card p-6">
+                    <div class="mb-4">
+                        <input type="text" id="search-series" placeholder="Buscar séries..." class="input">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left p-3">Nome</th>
+                                    <th class="text-left p-3">Escola</th>
+                                    <th class="text-left p-3">Salas</th>
+                                    <th class="text-left p-3">Alunos</th>
+                                    <th class="text-left p-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="series-table">
+                                <!-- Séries serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salas Section -->
+            <div id="salas-section" class="section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Gerenciar Salas</h3>
+                    <button onclick="openModal('sala-modal')" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Nova Sala
+                    </button>
+                </div>
+                <div class="card p-6">
+                    <div class="mb-4 flex flex-col md:flex-row gap-4">
+                        <input type="text" id="search-salas" placeholder="Buscar salas..." class="input flex-1">
+                        <select id="filter-escola" class="input">
+                            <option value="">Todas as escolas</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left p-3">Nome</th>
+                                    <th class="text-left p-3">Série</th>
+                                    <th class="text-left p-3">Escola</th>
+                                    <th class="text-left p-3">Alunos</th>
+                                    <th class="text-left p-3">Progresso</th>
+                                    <th class="text-left p-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salas-table">
+                                <!-- Salas serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alunos Section -->
+            <div id="alunos-section" class="section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Gerenciar Alunos</h3>
+                    <div class="flex gap-2">
+                        <button onclick="openModal('aluno-modal')" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Novo Aluno
+                        </button>
+                        <button onclick="importCSV('alunos')" class="btn btn-secondary">
+                            <i class="fas fa-upload"></i>
+                            Importar CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <div class="mb-4 flex flex-col md:flex-row gap-4">
+                        <input type="text" id="search-alunos" placeholder="Buscar alunos..." class="input flex-1">
+                        <select id="filter-sala" class="input">
+                            <option value="">Todas as salas</option>
+                        </select>
+                        <button onclick="exportCSV('alunos')" class="btn btn-secondary">
+                            <i class="fas fa-download"></i>
+                            Exportar
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left p-3">
+                                        <input type="checkbox" id="select-all-alunos" onchange="selectAllAlunos()">
+                                    </th>
+                                    <th class="text-left p-3">Nome</th>
+                                    <th class="text-left p-3">Email</th>
+                                    <th class="text-left p-3">Sala</th>
+                                    <th class="text-left p-3">Progresso</th>
+                                    <th class="text-left p-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alunos-table">
+                                <!-- Alunos serão inseridos aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="bulk-actions" class="mt-4 hidden">
+                        <button onclick="bulkMoveAlunos()" class="btn btn-secondary">
+                            <i class="fas fa-exchange-alt"></i>
+                            Mover Selecionados
+                        </button>
+                        <button onclick="bulkDeleteAlunos()" class="btn btn-danger">
+                            <i class="fas fa-trash"></i>
+                            Excluir Selecionados
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atividades Section -->
+            <div id="atividades-section" class="section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Gerenciar Atividades</h3>
+                    <button onclick="openModal('atividade-modal')" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Nova Atividade
+                    </button>
+                </div>
+                <div class="card p-6">
+                    <div class="mb-4 flex flex-col md:flex-row gap-4">
+                        <input type="text" id="search-atividades" placeholder="Buscar atividades..." class="input flex-1">
+                        <select id="filter-status" class="input">
+                            <option value="">Todos os status</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="andamento">Em Andamento</option>
+                            <option value="concluida">Concluída</option>
+                        </select>
+                        <button onclick="exportRelatorio()" class="btn btn-secondary">
+                            <i class="fas fa-file-pdf"></i>
+                            Relatório
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left p-3">Título</th>
+                                    <th class="text-left p-3">Sala</th>
+                                    <th class="text-left p-3">Prazo</th>
+                                    <th class="text-left p-3">Status</th>
+                                    <th class="text-left p-3">Progresso</th>
+                                    <th class="text-left p-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="atividades-table">
+                                <!-- Atividades serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moderadores Section -->
+            <div id="moderadores-section" class="section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Gerenciar Moderadores</h3>
+                    <button onclick="openModal('moderador-modal')" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Novo Moderador
+                    </button>
+                </div>
+                <div class="card p-6">
+                    <div class="mb-4">
+                        <input type="text" id="search-moderadores" placeholder="Buscar moderadores..." class="input">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left p-3">Nome</th>
+                                    <th class="text-left p-3">Email</th>
+                                    <th class="text-left p-3">Role</th>
+                                    <th class="text-left p-3">Último Login</th>
+                                    <th class="text-left p-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="moderadores-table">
+                                <!-- Moderadores serão inseridos aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configurações Section -->
+            <div id="configuracoes-section" class="section hidden">
+                <h3 class="text-2xl font-bold mb-6">Configurações</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h4 class="text-lg font-semibold mb-4">Preferências do Sistema</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-medium">Tema Escuro</label>
+                                <input type="checkbox" id="dark-mode-toggle" onchange="toggleTheme()">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-medium">Notificações</label>
+                                <input type="checkbox" id="notifications-toggle" checked>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium">Idioma</label>
+                                <select class="input mt-1">
+                                    <option>Português (BR)</option>
+                                    <option>English</option>
+                                    <option>Español</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h4 class="text-lg font-semibold mb-4">Logs do Sistema</h4>
+                        <div id="system-logs" class="space-y-2 max-h-64 overflow-y-auto">
+                            <!-- Logs serão inseridos aqui -->
+                        </div>
+                        <button onclick="clearLogs()" class="btn btn-danger mt-4">
+                            <i class="fas fa-trash"></i>
+                            Limpar Logs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Modal Escola -->
+    <div id="escola-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Nova Escola</h3>
+                <button onclick="closeModal('escola-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="escola-form" onsubmit="saveEscola(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome da Escola</label>
+                        <input type="text" name="nome" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Endereço</label>
+                        <input type="text" name="endereco" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Telefone</label>
+                        <input type="tel" name="telefone" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" name="email" required class="input">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="closeModal('escola-modal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Série -->
+    <div id="serie-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Nova Série</h3>
+                <button onclick="closeModal('serie-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="serie-form" onsubmit="saveSerie(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome da Série</label>
+                        <input type="text" name="nome" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Escola</label>
+                        <select name="escola_id" required class="input" id="serie-escola-select">
+                            <option value="">Selecione uma escola</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Descrição</label>
+                        <textarea name="descricao" class="input" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="closeModal('serie-modal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Sala -->
+    <div id="sala-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Nova Sala</h3>
+                <button onclick="closeModal('sala-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="sala-form" onsubmit="saveSala(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome da Sala</label>
+                        <input type="text" name="nome" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Série</label>
+                        <select name="serie_id" required class="input" id="sala-serie-select">
+                            <option value="">Selecione uma série</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Capacidade</label>
+                        <input type="number" name="capacidade" required class="input" min="1" max="50">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="closeModal('sala-modal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Aluno -->
+    <div id="aluno-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Novo Aluno</h3>
+                <button onclick="closeModal('aluno-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="aluno-form" onsubmit="saveAluno(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome Completo</label>
+                        <input type="text" name="nome" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" name="email" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Data de Nascimento</label>
+                        <input type="date" name="data_nascimento" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Sala</label>
+                        <select name="sala_id" required class="input" id="aluno-sala-select">
+                            <option value="">Selecione uma sala</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Telefone dos Responsáveis</label>
+                        <input type="tel" name="telefone_responsavel" class="input">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="closeModal('aluno-modal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Atividade -->
+    <div id="atividade-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Nova Atividade</h3>
+                <button onclick="closeModal('atividade-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="atividade-form" onsubmit="saveAtividade(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Título</label>
+                        <input type="text" name="titulo" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Descrição</label>
+                        <textarea name="descricao" required class="input" rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Sala</label>
+                        <select name="sala_id" required class="input" id="atividade-sala-select">
+                            <option value="">Selecione uma sala</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Tipo</label>
+                        <select name="tipo" required class="input">
+                            <option value="">Selecione o tipo</option>
+                            <option value="exercicio">Exercício</option>
+                            <option value="prova">Prova</option>
+                            <option value="trabalho">Trabalho</option>
+                            <option value="projeto">Projeto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Prazo</label>
+                        <input type="datetime-local" name="prazo" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Anexos (URLs)</label>
+                        <textarea name="anexos" class="input" rows="2" placeholder="Cole URLs de arquivos, uma por linha"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="closeModal('atividade-modal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Moderador -->
+    <div id="moderador-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Novo Moderador</h3>
+                <button onclick="closeModal('moderador-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="moderador-form" onsubmit="saveModerador(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome Completo</label>
+                        <input type="text" name="nome" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input type="email" name="email" required class="input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Senha</label>
+                        <input type="password" name="senha" required class="input" minlength="6">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Role</label>
+                        <select name="role" required class="input">
+                            <option value="">Selecione o role</option>
+                            <option value="admin">Administrador</option>
+                            <option value="moderador">Moderador</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="closeModal('moderador-modal')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Estado global da aplicação
+        const AppState = {
+            currentUser: { id: 1, nome: 'Admin', role: 'admin' },
+            escolas: [],
+            series: [],
+            salas: [],
+            alunos: [],
+            atividades: [],
+            moderadores: [],
+            logs: [],
+            darkMode: false
+        };
+
+        // Inicialização da aplicação
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            loadSampleData();
+            updateDashboard();
+            setupKeyboardShortcuts();
+        });
+
+        function initializeApp() {
+            // Carregar dados do localStorage
+            const savedData = localStorage.getItem('edumanager-data');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                Object.assign(AppState, data);
+            }
+
+            // Aplicar tema
+            if (AppState.darkMode) {
+                document.body.classList.add('dark');
+                document.getElementById('theme-icon').className = 'fas fa-sun';
+            }
+
+            // Mostrar dashboard inicial
+            showSection('dashboard');
+            
+            // Log de inicialização
+            addLog('Sistema iniciado', 'info');
+        }
+
+        function loadSampleData() {
+            if (AppState.escolas.length === 0) {
+                // Dados de exemplo
+                AppState.escolas = [
+                    { id: 1, nome: 'Escola Municipal João Silva', endereco: 'Rua das Flores, 123', telefone: '(11) 1234-5678', email: 'contato@joaosilva.edu.br' },
+                    { id: 2, nome: 'Colégio Estadual Maria Santos', endereco: 'Av. Principal, 456', telefone: '(11) 8765-4321', email: 'info@mariasantos.edu.br' }
+                ];
+
+                AppState.series = [
+                    { id: 1, nome: '1º Ano Fundamental', escola_id: 1, descricao: 'Primeira série do ensino fundamental' },
+                    { id: 2, nome: '2º Ano Fundamental', escola_id: 1, descricao: 'Segunda série do ensino fundamental' },
+                    { id: 3, nome: '1º Ano Médio', escola_id: 2, descricao: 'Primeira série do ensino médio' }
+                ];
+
+                AppState.salas = [
+                    { id: 1, nome: 'Sala A', serie_id: 1, capacidade: 30 },
+                    { id: 2, nome: 'Sala B', serie_id: 1, capacidade: 25 },
+                    { id: 3, nome: 'Turma 101', serie_id: 3, capacidade: 35 }
+                ];
+
+                AppState.alunos = [
+                    { id: 1, nome: 'Ana Silva', email: 'ana@email.com', data_nascimento: '2010-05-15', sala_id: 1, telefone_responsavel: '(11) 9999-1111' },
+                    { id: 2, nome: 'Carlos Santos', email: 'carlos@email.com', data_nascimento: '2010-03-22', sala_id: 1, telefone_responsavel: '(11) 9999-2222' },
+                    { id: 3, nome: 'Beatriz Costa', email: 'beatriz@email.com', data_nascimento: '2005-08-10', sala_id: 3, telefone_responsavel: '(11) 9999-3333' }
+                ];
+
+                AppState.atividades = [
+                    { 
+                        id: 1, 
+                        titulo: 'Exercícios de Matemática', 
+                        descricao: 'Resolver problemas de adição e subtração', 
+                        sala_id: 1, 
+                        tipo: 'exercicio', 
+                        prazo: '2024-12-30T23:59', 
+                        status: 'ativa',
+                        progresso: { concluidas: 15, total: 25 }
+                    },
+                    { 
+                        id: 2, 
+                        titulo: 'Redação sobre Meio Ambiente', 
+                        descricao: 'Escrever uma redação de 20 linhas sobre preservação ambiental', 
+                        sala_id: 3, 
+                        tipo: 'trabalho', 
+                        prazo: '2024-12-25T23:59', 
+                        status: 'ativa',
+                        progresso: { concluidas: 28, total: 35 }
+                    }
+                ];
+
+                AppState.moderadores = [
+                    { id: 1, nome: 'Admin Sistema', email: 'admin@edumanager.com', role: 'admin', ultimo_login: '2024-12-20T10:30:00' },
+                    { id: 2, nome: 'Prof. Maria Oliveira', email: 'maria@edumanager.com', role: 'moderador', ultimo_login: '2024-12-19T14:15:00' }
+                ];
+
+                saveData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('edumanager-data', JSON.stringify(AppState));
+        }
+
+        function showSection(sectionName) {
+            // Esconder todas as seções
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Mostrar seção selecionada
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+
+            // Atualizar título da página
+            const titles = {
+                'dashboard': 'Dashboard',
+                'escolas': 'Escolas',
+                'series': 'Séries',
+                'salas': 'Salas',
+                'alunos': 'Alunos',
+                'atividades': 'Atividades',
+                'moderadores': 'Moderadores',
+                'configuracoes': 'Configurações'
+            };
+            document.getElementById('page-title').textContent = titles[sectionName];
+
+            // Atualizar navegação ativa
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('bg-blue-100', 'text-blue-700');
+            });
+            event?.target?.classList.add('bg-blue-100', 'text-blue-700');
+
+            // Carregar dados da seção
+            switch(sectionName) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'escolas':
+                    renderEscolas();
+                    break;
+                case 'series':
+                    renderSeries();
+                    populateEscolaSelects();
+                    break;
+                case 'salas':
+                    renderSalas();
+                    populateSerieSelects();
+                    populateEscolaFilter();
+                    break;
+                case 'alunos':
+                    renderAlunos();
+                    populateSalaSelects();
+                    populateSalaFilter();
+                    break;
+                case 'atividades':
+                    renderAtividades();
+                    populateSalaSelects();
+                    break;
+                case 'moderadores':
+                    renderModeradores();
+                    break;
+                case 'configuracoes':
+                    renderLogs();
+                    break;
+            }
+
+            addLog(`Navegou para ${titles[sectionName]}`, 'info');
+        }
+
+        function updateDashboard() {
+            // Atualizar KPIs
+            document.getElementById('total-escolas').textContent = AppState.escolas.length;
+            document.getElementById('total-alunos').textContent = AppState.alunos.length;
+            document.getElementById('total-atividades').textContent = AppState.atividades.filter(a => a.status === 'ativa').length;
+
+            // Calcular taxa de conclusão
+            const totalAtividades = AppState.atividades.reduce((acc, ativ) => acc + ativ.progresso.total, 0);
+            const totalConcluidas = AppState.atividades.reduce((acc, ativ) => acc + ativ.progresso.concluidas, 0);
+            const taxaConclusao = totalAtividades > 0 ? Math.round((totalConcluidas / totalAtividades) * 100) : 0;
+            document.getElementById('taxa-conclusao').textContent = taxaConclusao + '%';
+
+            // Renderizar progresso por sala
+            renderProgressoSalas();
+            renderAtividadesRecentes();
+        }
+
+        function renderProgressoSalas() {
+            const container = document.getElementById('progresso-salas');
+            container.innerHTML = '';
+
+            AppState.salas.forEach(sala => {
+                const atividades = AppState.atividades.filter(a => a.sala_id === sala.id);
+                const totalAtividades = atividades.reduce((acc, a) => acc + a.progresso.total, 0);
+                const totalConcluidas = atividades.reduce((acc, a) => acc + a.progresso.concluidas, 0);
+                const progresso = totalAtividades > 0 ? Math.round((totalConcluidas / totalAtividades) * 100) : 0;
+
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium">${sala.nome}</span>
+                        <span class="text-sm text-gray-600">${progresso}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progresso}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderAtividadesRecentes() {
+            const container = document.getElementById('atividades-recentes');
+            container.innerHTML = '';
+
+            const atividadesRecentes = AppState.atividades
+                .sort((a, b) => new Date(b.prazo) - new Date(a.prazo))
+                .slice(0, 5);
+
+            atividadesRecentes.forEach(atividade => {
+                const sala = AppState.salas.find(s => s.id === atividade.sala_id);
+                const prazo = new Date(atividade.prazo).toLocaleDateString('pt-BR');
+                
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                div.innerHTML = `
+                    <div>
+                        <p class="font-medium">${atividade.titulo}</p>
+                        <p class="text-sm text-gray-600">${sala?.nome} • ${prazo}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                        ${atividade.tipo}
+                    </span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderEscolas() {
+            const tbody = document.getElementById('escolas-table');
+            tbody.innerHTML = '';
+
+            AppState.escolas.forEach(escola => {
+                const alunosCount = AppState.alunos.filter(aluno => {
+                    const sala = AppState.salas.find(s => s.id === aluno.sala_id);
+                    const serie = AppState.series.find(s => s.id === sala?.serie_id);
+                    return serie?.escola_id === escola.id;
+                }).length;
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3">${escola.nome}</td>
+                    <td class="p-3">${escola.endereco}</td>
+                    <td class="p-3">${escola.telefone}</td>
+                    <td class="p-3">${alunosCount}</td>
+                    <td class="p-3">
+                        <button onclick="editEscola(${escola.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteEscola(${escola.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderSeries() {
+            const tbody = document.getElementById('series-table');
+            tbody.innerHTML = '';
+
+            AppState.series.forEach(serie => {
+                const escola = AppState.escolas.find(e => e.id === serie.escola_id);
+                const salasCount = AppState.salas.filter(s => s.serie_id === serie.id).length;
+                const alunosCount = AppState.alunos.filter(aluno => {
+                    const sala = AppState.salas.find(s => s.id === aluno.sala_id);
+                    return sala?.serie_id === serie.id;
+                }).length;
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3">${serie.nome}</td>
+                    <td class="p-3">${escola?.nome || 'N/A'}</td>
+                    <td class="p-3">${salasCount}</td>
+                    <td class="p-3">${alunosCount}</td>
+                    <td class="p-3">
+                        <button onclick="editSerie(${serie.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteSerie(${serie.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderSalas() {
+            const tbody = document.getElementById('salas-table');
+            tbody.innerHTML = '';
+
+            AppState.salas.forEach(sala => {
+                const serie = AppState.series.find(s => s.id === sala.serie_id);
+                const escola = AppState.escolas.find(e => e.id === serie?.escola_id);
+                const alunosCount = AppState.alunos.filter(a => a.sala_id === sala.id).length;
+                
+                // Calcular progresso da sala
+                const atividades = AppState.atividades.filter(a => a.sala_id === sala.id);
+                const totalAtividades = atividades.reduce((acc, a) => acc + a.progresso.total, 0);
+                const totalConcluidas = atividades.reduce((acc, a) => acc + a.progresso.concluidas, 0);
+                const progresso = totalAtividades > 0 ? Math.round((totalConcluidas / totalAtividades) * 100) : 0;
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3">${sala.nome}</td>
+                    <td class="p-3">${serie?.nome || 'N/A'}</td>
+                    <td class="p-3">${escola?.nome || 'N/A'}</td>
+                    <td class="p-3">${alunosCount}/${sala.capacidade}</td>
+                    <td class="p-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="progress-bar flex-1">
+                                <div class="progress-fill" style="width: ${progresso}%"></div>
+                            </div>
+                            <span class="text-sm">${progresso}%</span>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="editSala(${sala.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteSala(${sala.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderAlunos() {
+            const tbody = document.getElementById('alunos-table');
+            tbody.innerHTML = '';
+
+            AppState.alunos.forEach(aluno => {
+                const sala = AppState.salas.find(s => s.id === aluno.sala_id);
+                
+                // Calcular progresso do aluno
+                const atividades = AppState.atividades.filter(a => a.sala_id === aluno.sala_id);
+                const progresso = atividades.length > 0 ? Math.floor(Math.random() * 100) : 0; // Simulado
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <input type="checkbox" class="aluno-checkbox" value="${aluno.id}" onchange="toggleBulkActions()">
+                    </td>
+                    <td class="p-3">${aluno.nome}</td>
+                    <td class="p-3">${aluno.email}</td>
+                    <td class="p-3">${sala?.nome || 'N/A'}</td>
+                    <td class="p-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="progress-bar flex-1">
+                                <div class="progress-fill" style="width: ${progresso}%"></div>
+                            </div>
+                            <span class="text-sm">${progresso}%</span>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="editAluno(${aluno.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteAluno(${aluno.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderAtividades() {
+            const tbody = document.getElementById('atividades-table');
+            tbody.innerHTML = '';
+
+            AppState.atividades.forEach(atividade => {
+                const sala = AppState.salas.find(s => s.id === atividade.sala_id);
+                const prazo = new Date(atividade.prazo).toLocaleDateString('pt-BR');
+                const progresso = Math.round((atividade.progresso.concluidas / atividade.progresso.total) * 100);
+                
+                const statusColors = {
+                    'ativa': 'bg-green-100 text-green-800',
+                    'pendente': 'bg-yellow-100 text-yellow-800',
+                    'concluida': 'bg-blue-100 text-blue-800'
+                };
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3">${atividade.titulo}</td>
+                    <td class="p-3">${sala?.nome || 'N/A'}</td>
+                    <td class="p-3">${prazo}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 text-xs rounded-full ${statusColors[atividade.status] || statusColors.pendente}">
+                            ${atividade.status}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="progress-bar flex-1">
+                                <div class="progress-fill" style="width: ${progresso}%"></div>
+                            </div>
+                            <span class="text-sm">${atividade.progresso.concluidas}/${atividade.progresso.total}</span>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="editAtividade(${atividade.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteAtividade(${atividade.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderModeradores() {
+            const tbody = document.getElementById('moderadores-table');
+            tbody.innerHTML = '';
+
+            AppState.moderadores.forEach(moderador => {
+                const ultimoLogin = new Date(moderador.ultimo_login).toLocaleDateString('pt-BR');
+                
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3">${moderador.nome}</td>
+                    <td class="p-3">${moderador.email}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 text-xs rounded-full ${moderador.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">
+                            ${moderador.role}
+                        </span>
+                    </td>
+                    <td class="p-3">${ultimoLogin}</td>
+                    <td class="p-3">
+                        <button onclick="editModerador(${moderador.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteModerador(${moderador.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('system-logs');
+            container.innerHTML = '';
+
+            AppState.logs.slice(-20).reverse().forEach(log => {
+                const div = document.createElement('div');
+                div.className = 'text-sm p-2 bg-gray-100 rounded';
+                div.innerHTML = `
+                    <span class="text-gray-500">${new Date(log.timestamp).toLocaleString('pt-BR')}</span>
+                    <span class="font-medium">${log.message}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Funções de Modal
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Limpar formulário
+            const form = document.querySelector(`#${modalId} form`);
+            if (form) form.reset();
+        }
+
+        // Funções de CRUD - Escolas
+        function saveEscola(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const escola = {
+                id: Date.now(),
+                nome: formData.get('nome'),
+                endereco: formData.get('endereco'),
+                telefone: formData.get('telefone'),
+                email: formData.get('email')
+            };
+
+            AppState.escolas.push(escola);
+            saveData();
+            closeModal('escola-modal');
+            renderEscolas();
+            showToast('Escola criada com sucesso!', 'success');
+            addLog(`Escola "${escola.nome}" criada`, 'create');
+        }
+
+        function editEscola(id) {
+            const escola = AppState.escolas.find(e => e.id === id);
+            if (!escola) return;
+
+            // Preencher formulário com dados da escola
+            const form = document.getElementById('escola-form');
+            form.nome.value = escola.nome;
+            form.endereco.value = escola.endereco;
+            form.telefone.value = escola.telefone;
+            form.email.value = escola.email;
+
+            // Modificar comportamento do formulário para edição
+            form.onsubmit = function(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                
+                escola.nome = formData.get('nome');
+                escola.endereco = formData.get('endereco');
+                escola.telefone = formData.get('telefone');
+                escola.email = formData.get('email');
+
+                saveData();
+                closeModal('escola-modal');
+                renderEscolas();
+                showToast('Escola atualizada com sucesso!', 'success');
+                addLog(`Escola "${escola.nome}" editada`, 'edit');
+
+                // Restaurar comportamento original
+                form.onsubmit = saveEscola;
+            };
+
+            openModal('escola-modal');
+        }
+
+        function deleteEscola(id) {
+            if (confirm('Tem certeza que deseja excluir esta escola?')) {
+                const escola = AppState.escolas.find(e => e.id === id);
+                AppState.escolas = AppState.escolas.filter(e => e.id !== id);
+                saveData();
+                renderEscolas();
+                showToast('Escola excluída com sucesso!', 'success');
+                addLog(`Escola "${escola?.nome}" excluída`, 'delete');
+            }
+        }
+
+        // Funções de CRUD - Séries
+        function saveSerie(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const serie = {
+                id: Date.now(),
+                nome: formData.get('nome'),
+                escola_id: parseInt(formData.get('escola_id')),
+                descricao: formData.get('descricao')
+            };
+
+            AppState.series.push(serie);
+            saveData();
+            closeModal('serie-modal');
+            renderSeries();
+            showToast('Série criada com sucesso!', 'success');
+            addLog(`Série "${serie.nome}" criada`, 'create');
+        }
+
+        function editSerie(id) {
+            const serie = AppState.series.find(s => s.id === id);
+            if (!serie) return;
+
+            const form = document.getElementById('serie-form');
+            form.nome.value = serie.nome;
+            form.escola_id.value = serie.escola_id;
+            form.descricao.value = serie.descricao;
+
+            form.onsubmit = function(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                
+                serie.nome = formData.get('nome');
+                serie.escola_id = parseInt(formData.get('escola_id'));
+                serie.descricao = formData.get('descricao');
+
+                saveData();
+                closeModal('serie-modal');
+                renderSeries();
+                showToast('Série atualizada com sucesso!', 'success');
+                addLog(`Série "${serie.nome}" editada`, 'edit');
+
+                form.onsubmit = saveSerie;
+            };
+
+            openModal('serie-modal');
+        }
+
+        function deleteSerie(id) {
+            if (confirm('Tem certeza que deseja excluir esta série?')) {
+                const serie = AppState.series.find(s => s.id === id);
+                AppState.series = AppState.series.filter(s => s.id !== id);
+                saveData();
+                renderSeries();
+                showToast('Série excluída com sucesso!', 'success');
+                addLog(`Série "${serie?.nome}" excluída`, 'delete');
+            }
+        }
+
+        // Funções de CRUD - Salas
+        function saveSala(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const sala = {
+                id: Date.now(),
+                nome: formData.get('nome'),
+                serie_id: parseInt(formData.get('serie_id')),
+                capacidade: parseInt(formData.get('capacidade'))
+            };
+
+            AppState.salas.push(sala);
+            saveData();
+            closeModal('sala-modal');
+            renderSalas();
+            showToast('Sala criada com sucesso!', 'success');
+            addLog(`Sala "${sala.nome}" criada`, 'create');
+        }
+
+        function editSala(id) {
+            const sala = AppState.salas.find(s => s.id === id);
+            if (!sala) return;
+
+            const form = document.getElementById('sala-form');
+            form.nome.value = sala.nome;
+            form.serie_id.value = sala.serie_id;
+            form.capacidade.value = sala.capacidade;
+
+            form.onsubmit = function(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                
+                sala.nome = formData.get('nome');
+                sala.serie_id = parseInt(formData.get('serie_id'));
+                sala.capacidade = parseInt(formData.get('capacidade'));
+
+                saveData();
+                closeModal('sala-modal');
+                renderSalas();
+                showToast('Sala atualizada com sucesso!', 'success');
+                addLog(`Sala "${sala.nome}" editada`, 'edit');
+
+                form.onsubmit = saveSala;
+            };
+
+            openModal('sala-modal');
+        }
+
+        function deleteSala(id) {
+            if (confirm('Tem certeza que deseja excluir esta sala?')) {
+                const sala = AppState.salas.find(s => s.id === id);
+                AppState.salas = AppState.salas.filter(s => s.id !== id);
+                saveData();
+                renderSalas();
+                showToast('Sala excluída com sucesso!', 'success');
+                addLog(`Sala "${sala?.nome}" excluída`, 'delete');
+            }
+        }
+
+        // Funções de CRUD - Alunos
+        function saveAluno(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const aluno = {
+                id: Date.now(),
+                nome: formData.get('nome'),
+                email: formData.get('email'),
+                data_nascimento: formData.get('data_nascimento'),
+                sala_id: parseInt(formData.get('sala_id')),
+                telefone_responsavel: formData.get('telefone_responsavel')
+            };
+
+            AppState.alunos.push(aluno);
+            saveData();
+            closeModal('aluno-modal');
+            renderAlunos();
+            showToast('Aluno criado com sucesso!', 'success');
+            addLog(`Aluno "${aluno.nome}" criado`, 'create');
+        }
+
+        function editAluno(id) {
+            const aluno = AppState.alunos.find(a => a.id === id);
+            if (!aluno) return;
+
+            const form = document.getElementById('aluno-form');
+            form.nome.value = aluno.nome;
+            form.email.value = aluno.email;
+            form.data_nascimento.value = aluno.data_nascimento;
+            form.sala_id.value = aluno.sala_id;
+            form.telefone_responsavel.value = aluno.telefone_responsavel;
+
+            form.onsubmit = function(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                
+                aluno.nome = formData.get('nome');
+                aluno.email = formData.get('email');
+                aluno.data_nascimento = formData.get('data_nascimento');
+                aluno.sala_id = parseInt(formData.get('sala_id'));
+                aluno.telefone_responsavel = formData.get('telefone_responsavel');
+
+                saveData();
+                closeModal('aluno-modal');
+                renderAlunos();
+                showToast('Aluno atualizado com sucesso!', 'success');
+                addLog(`Aluno "${aluno.nome}" editado`, 'edit');
+
+                form.onsubmit = saveAluno;
+            };
+
+            openModal('aluno-modal');
+        }
+
+        function deleteAluno(id) {
+            if (confirm('Tem certeza que deseja excluir este aluno?')) {
+                const aluno = AppState.alunos.find(a => a.id === id);
+                AppState.alunos = AppState.alunos.filter(a => a.id !== id);
+                saveData();
+                renderAlunos();
+                showToast('Aluno excluído com sucesso!', 'success');
+                addLog(`Aluno "${aluno?.nome}" excluído`, 'delete');
+            }
+        }
+
+        // Funções de CRUD - Atividades
+        function saveAtividade(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const sala = AppState.salas.find(s => s.id === parseInt(formData.get('sala_id')));
+            const totalAlunos = AppState.alunos.filter(a => a.sala_id === sala.id).length;
+            
+            const atividade = {
+                id: Date.now(),
+                titulo: formData.get('titulo'),
+                descricao: formData.get('descricao'),
+                sala_id: parseInt(formData.get('sala_id')),
+                tipo: formData.get('tipo'),
+                prazo: formData.get('prazo'),
+                anexos: formData.get('anexos'),
+                status: 'ativa',
+                progresso: { concluidas: 0, total: totalAlunos }
+            };
+
+            AppState.atividades.push(atividade);
+            saveData();
+            closeModal('atividade-modal');
+            renderAtividades();
+            showToast('Atividade criada com sucesso!', 'success');
+            addLog(`Atividade "${atividade.titulo}" criada`, 'create');
+        }
+
+        function editAtividade(id) {
+            const atividade = AppState.atividades.find(a => a.id === id);
+            if (!atividade) return;
+
+            const form = document.getElementById('atividade-form');
+            form.titulo.value = atividade.titulo;
+            form.descricao.value = atividade.descricao;
+            form.sala_id.value = atividade.sala_id;
+            form.tipo.value = atividade.tipo;
+            form.prazo.value = atividade.prazo;
+            form.anexos.value = atividade.anexos;
+
+            form.onsubmit = function(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                
+                atividade.titulo = formData.get('titulo');
+                atividade.descricao = formData.get('descricao');
+                atividade.sala_id = parseInt(formData.get('sala_id'));
+                atividade.tipo = formData.get('tipo');
+                atividade.prazo = formData.get('prazo');
+                atividade.anexos = formData.get('anexos');
+
+                saveData();
+                closeModal('atividade-modal');
+                renderAtividades();
+                showToast('Atividade atualizada com sucesso!', 'success');
+                addLog(`Atividade "${atividade.titulo}" editada`, 'edit');
+
+                form.onsubmit = saveAtividade;
+            };
+
+            openModal('atividade-modal');
+        }
+
+        function deleteAtividade(id) {
+            if (confirm('Tem certeza que deseja excluir esta atividade?')) {
+                const atividade = AppState.atividades.find(a => a.id === id);
+                AppState.atividades = AppState.atividades.filter(a => a.id !== id);
+                saveData();
+                renderAtividades();
+                showToast('Atividade excluída com sucesso!', 'success');
+                addLog(`Atividade "${atividade?.titulo}" excluída`, 'delete');
+            }
+        }
+
+        // Funções de CRUD - Moderadores
+        function saveModerador(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const moderador = {
+                id: Date.now(),
+                nome: formData.get('nome'),
+                email: formData.get('email'),
+                senha: formData.get('senha'), // Em produção, seria hasheada
+                role: formData.get('role'),
+                ultimo_login: new Date().toISOString()
+            };
+
+            AppState.moderadores.push(moderador);
+            saveData();
+            closeModal('moderador-modal');
+            renderModeradores();
+            showToast('Moderador criado com sucesso!', 'success');
+            addLog(`Moderador "${moderador.nome}" criado`, 'create');
+        }
+
+        function editModerador(id) {
+            const moderador = AppState.moderadores.find(m => m.id === id);
+            if (!moderador) return;
+
+            const form = document.getElementById('moderador-form');
+            form.nome.value = moderador.nome;
+            form.email.value = moderador.email;
+            form.role.value = moderador.role;
+
+            form.onsubmit = function(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                
+                moderador.nome = formData.get('nome');
+                moderador.email = formData.get('email');
+                moderador.role = formData.get('role');
+                if (formData.get('senha')) {
+                    moderador.senha = formData.get('senha');
+                }
+
+                saveData();
+                closeModal('moderador-modal');
+                renderModeradores();
+                showToast('Moderador atualizado com sucesso!', 'success');
+                addLog(`Moderador "${moderador.nome}" editado`, 'edit');
+
+                form.onsubmit = saveModerador;
+            };
+
+            openModal('moderador-modal');
+        }
+
+        function deleteModerador(id) {
+            if (confirm('Tem certeza que deseja excluir este moderador?')) {
+                const moderador = AppState.moderadores.find(m => m.id === id);
+                AppState.moderadores = AppState.moderadores.filter(m => m.id !== id);
+                saveData();
+                renderModeradores();
+                showToast('Moderador excluído com sucesso!', 'success');
+                addLog(`Moderador "${moderador?.nome}" excluído`, 'delete');
+            }
+        }
+
+        // Funções auxiliares
+        function populateEscolaSelects() {
+            const select = document.getElementById('serie-escola-select');
+            select.innerHTML = '<option value="">Selecione uma escola</option>';
+            AppState.escolas.forEach(escola => {
+                const option = document.createElement('option');
+                option.value = escola.id;
+                option.textContent = escola.nome;
+                select.appendChild(option);
+            });
+        }
+
+        function populateSerieSelects() {
+            const select = document.getElementById('sala-serie-select');
+            select.innerHTML = '<option value="">Selecione uma série</option>';
+            AppState.series.forEach(serie => {
+                const escola = AppState.escolas.find(e => e.id === serie.escola_id);
+                const option = document.createElement('option');
+                option.value = serie.id;
+                option.textContent = `${serie.nome} - ${escola?.nome}`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateSalaSelects() {
+            const selects = ['aluno-sala-select', 'atividade-sala-select'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="">Selecione uma sala</option>';
+                    AppState.salas.forEach(sala => {
+                        const serie = AppState.series.find(s => s.id === sala.serie_id);
+                        const escola = AppState.escolas.find(e => e.id === serie?.escola_id);
+                        const option = document.createElement('option');
+                        option.value = sala.id;
+                        option.textContent = `${sala.nome} - ${serie?.nome} - ${escola?.nome}`;
+                        select.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        function populateEscolaFilter() {
+            const select = document.getElementById('filter-escola');
+            select.innerHTML = '<option value="">Todas as escolas</option>';
+            AppState.escolas.forEach(escola => {
+                const option = document.createElement('option');
+                option.value = escola.id;
+                option.textContent = escola.nome;
+                select.appendChild(option);
+            });
+        }
+
+        function populateSalaFilter() {
+            const select = document.getElementById('filter-sala');
+            select.innerHTML = '<option value="">Todas as salas</option>';
+            AppState.salas.forEach(sala => {
+                const serie = AppState.series.find(s => s.id === sala.serie_id);
+                const escola = AppState.escolas.find(e => e.id === serie?.escola_id);
+                const option = document.createElement('option');
+                option.value = sala.id;
+                option.textContent = `${sala.nome} - ${serie?.nome} - ${escola?.nome}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Funções de UI
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function toggleTheme() {
+            AppState.darkMode = !AppState.darkMode;
+            document.body.classList.toggle('dark');
+            
+            const icon = document.getElementById('theme-icon');
+            icon.className = AppState.darkMode ? 'fas fa-sun' : 'fas fa-moon';
+            
+            saveData();
+            addLog(`Tema alterado para ${AppState.darkMode ? 'escuro' : 'claro'}`, 'info');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function addLog(message, type) {
+            const log = {
+                timestamp: new Date().toISOString(),
+                message: message,
+                type: type,
+                user: AppState.currentUser.nome
+            };
+            AppState.logs.push(log);
+            saveData();
+        }
+
+        function clearLogs() {
+            if (confirm('Tem certeza que deseja limpar todos os logs?')) {
+                AppState.logs = [];
+                saveData();
+                renderLogs();
+                showToast('Logs limpos com sucesso!', 'success');
+            }
+        }
+
+        // Funções de ações em massa
+        function selectAllAlunos() {
+            const checkboxes = document.querySelectorAll('.aluno-checkbox');
+            const selectAll = document.getElementById('select-all-alunos');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            
+            toggleBulkActions();
+        }
+
+        function toggleBulkActions() {
+            const checkboxes = document.querySelectorAll('.aluno-checkbox:checked');
+            const bulkActions = document.getElementById('bulk-actions');
+            
+            if (checkboxes.length > 0) {
+                bulkActions.classList.remove('hidden');
+            } else {
+                bulkActions.classList.add('hidden');
+            }
+        }
+
+        function bulkMoveAlunos() {
+            const checkboxes = document.querySelectorAll('.aluno-checkbox:checked');
+            const alunoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            if (alunoIds.length === 0) return;
+            
+            const novaSalaId = prompt('Digite o ID da nova sala:');
+            if (!novaSalaId) return;
+            
+            const novaSala = AppState.salas.find(s => s.id === parseInt(novaSalaId));
+            if (!novaSala) {
+                showToast('Sala não encontrada!', 'error');
+                return;
+            }
+            
+            alunoIds.forEach(id => {
+                const aluno = AppState.alunos.find(a => a.id === id);
+                if (aluno) {
+                    aluno.sala_id = parseInt(novaSalaId);
+                }
+            });
+            
+            saveData();
+            renderAlunos();
+            showToast(`${alunoIds.length} alunos movidos para ${novaSala.nome}!`, 'success');
+            addLog(`${alunoIds.length} alunos movidos em massa`, 'bulk');
+        }
+
+        function bulkDeleteAlunos() {
+            const checkboxes = document.querySelectorAll('.aluno-checkbox:checked');
+            const alunoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            if (alunoIds.length === 0) return;
+            
+            if (confirm(`Tem certeza que deseja excluir ${alunoIds.length} alunos?`)) {
+                AppState.alunos = AppState.alunos.filter(a => !alunoIds.includes(a.id));
+                saveData();
+                renderAlunos();
+                showToast(`${alunoIds.length} alunos excluídos!`, 'success');
+                addLog(`${alunoIds.length} alunos excluídos em massa`, 'bulk');
+            }
+        }
+
+        // Funções de importação/exportação
+        function exportCSV(type) {
+            let data, headers, filename;
+            
+            switch(type) {
+                case 'escolas':
+                    data = AppState.escolas;
+                    headers = ['ID', 'Nome', 'Endereço', 'Telefone', 'Email'];
+                    filename = 'escolas.csv';
+                    break;
+                case 'alunos':
+                    data = AppState.alunos.map(aluno => {
+                        const sala = AppState.salas.find(s => s.id === aluno.sala_id);
+                        return { ...aluno, sala_nome: sala?.nome };
+                    });
+                    headers = ['ID', 'Nome', 'Email', 'Data Nascimento', 'Sala', 'Telefone Responsável'];
+                    filename = 'alunos.csv';
+                    break;
+                default:
+                    return;
+            }
+            
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => Object.values(row).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showToast(`${filename} exportado com sucesso!`, 'success');
+            addLog(`Exportação de ${type} realizada`, 'export');
+        }
+
+        function importCSV(type) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+                    const headers = lines[0].split(',');
+                    
+                    // Processar dados do CSV
+                    for (let i = 1; i < lines.length; i++) {
+                        if (lines[i].trim()) {
+                            const values = lines[i].split(',');
+                            // Aqui você processaria cada linha do CSV
+                            console.log('Linha importada:', values);
+                        }
+                    }
+                    
+                    showToast('CSV importado com sucesso!', 'success');
+                    addLog(`Importação de ${type} realizada`, 'import');
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function exportRelatorio() {
+            const relatorio = {
+                data_geracao: new Date().toISOString(),
+                total_escolas: AppState.escolas.length,
+                total_alunos: AppState.alunos.length,
+                total_atividades: AppState.atividades.length,
+                atividades_por_status: AppState.atividades.reduce((acc, ativ) => {
+                    acc[ativ.status] = (acc[ativ.status] || 0) + 1;
+                    return acc;
+                }, {}),
+                progresso_geral: AppState.atividades.reduce((acc, ativ) => {
+                    acc.total += ativ.progresso.total;
+                    acc.concluidas += ativ.progresso.concluidas;
+                    return acc;
+                }, { total: 0, concluidas: 0 })
+            };
+            
+            const blob = new Blob([JSON.stringify(relatorio, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showToast('Relatório exportado com sucesso!', 'success');
+            addLog('Relatório gerado', 'export');
+        }
+
+        // Atalhos de teclado
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(event) {
+                // Ctrl/Cmd + tecla
+                if (event.ctrlKey || event.metaKey) {
+                    switch(event.key) {
+                        case 'n':
+                            event.preventDefault();
+                            // Abrir modal baseado na seção atual
+                            const currentSection = document.querySelector('.section:not(.hidden)').id;
+                            if (currentSection.includes('escolas')) openModal('escola-modal');
+                            else if (currentSection.includes('series')) openModal('serie-modal');
+                            else if (currentSection.includes('salas')) openModal('sala-modal');
+                            else if (currentSection.includes('alunos')) openModal('aluno-modal');
+                            else if (currentSection.includes('atividades')) openModal('atividade-modal');
+                            else if (currentSection.includes('moderadores')) openModal('moderador-modal');
+                            break;
+                        case '/':
+                            event.preventDefault();
+                            // Focar no campo de busca
+                            const searchInput = document.querySelector('input[type="text"][placeholder*="Buscar"]');
+                            if (searchInput) searchInput.focus();
+                            break;
+                    }
+                }
+                
+                // Tecla ESC para fechar modais
+                if (event.key === 'Escape') {
+                    const activeModal = document.querySelector('.modal.active');
+                    if (activeModal) {
+                        activeModal.classList.remove('active');
+                        document.body.style.overflow = 'auto';
+                    }
+                }
+            });
+        }
+
+        function logout() {
+            if (confirm('Tem certeza que deseja sair?')) {
+                addLog('Logout realizado', 'info');
+                // Em uma aplicação real, redirecionaria para login
+                showToast('Logout realizado com sucesso!', 'success');
+            }
+        }
+
+        // Fechar sidebar ao clicar fora (mobile)
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isToggleButton = event.target.closest('button[onclick="toggleSidebar()"]');
+            
+            if (!isClickInsideSidebar && !isToggleButton && window.innerWidth < 768) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9764aee57556c700',t:'MTc1NjM5MzI3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
